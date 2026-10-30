@@ -84,29 +84,24 @@ The part of this design I like most is that adapters can wrap each other. A requ
 This is what happens between typing in the first address and opening a rental search.
 
 ```mermaid
+%%{init: {'sequence': {'mirrorActors': false}}}%%
 sequenceDiagram
-    actor User
     participant UI as Browser
-    participant API as API
+    participant API
     participant Chain as Isochrone chain
-    participant Ext as openrouteservice / timetable
     participant Worker as Worker thread
 
-    User->>UI: adds a destination (address, mode, minutes)
-    UI->>API: POST /api/isochrone
+    UI->>API: POST /api/isochrone, once per destination
     API->>Chain: area for this destination
-    Chain->>Ext: only if not cached and within budget
-    Ext-->>Chain: area
+    Note over Chain: bus and train: own timetable router<br/>otherwise: cache, budget,<br/>only then openrouteservice
     Chain-->>API: GeoJSON
-    API-->>UI: area appears on the map
-    Note over UI: repeats per destination, the map builds up step by step
-    UI->>API: POST /api/analyze (every destination ready)
+    API-->>UI: area on the map
+    UI->>API: POST /api/analyze
     API->>Worker: combine the areas
     Worker-->>API: shared region
-    API-->>UI: region, then its places, rents and map layers
-    User->>UI: opens the rental search
+    API-->>UI: region, places, rents, layers
     UI->>API: POST /api/listings/links
-    API-->>UI: search links that cover the region
+    API-->>UI: rental search links
 ```
 
 ## A few things worth mentioning
