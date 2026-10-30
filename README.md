@@ -84,7 +84,6 @@ The part of this design I like most is that adapters can wrap each other. A requ
 This is what happens between typing in the first address and opening a rental search.
 
 ```mermaid
-%%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
     actor User
     participant UI as Browser
