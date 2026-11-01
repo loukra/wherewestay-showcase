@@ -2,7 +2,7 @@
 
 Flat listings tell you how far a place is from the city centre. That is rarely the distance that matters. What you actually want to know is whether you can still get to work, to your family and to the things you do every week without spending half the day on the road, and with two people and a few fixed places that question gets hard to answer on a map.
 
-Where We Stay answers it. It is live at [wherewestay.de](https://wherewestay.de), and I build and run it on my own. The code itself is private, so this repository is the tour: what the app does, how it is put together, and three files taken straight out of the codebase.
+Where We Stay answers it. It is live at [wherewestay.de](https://wherewestay.de), and I build and run it on my own. The app is a running product, so its code stays private, and this repository is the tour instead: what the app does, how it is put together, and a slice of real code taken straight out of the codebase.
 
 ![Three destinations, each with its own way of getting there: bicycle, public transport and car](docs/destinations.png)
 
@@ -118,13 +118,21 @@ There are also a little over 900 tests, covering the domain rules, the adapters,
 
 ## Code samples
 
-These three files are copied unchanged, German comments included. I use comments to explain why something is the way it is, often with the measurement that settled it.
+These files are copied unchanged, German comments included. I use comments to explain why something is the way it is, often with the measurement that settled it. They do not build on their own: the models, the geometry, the server and the rest of the adapters are not here.
 
 [`isochrone-provider.ts`](samples/isochrone-provider.ts) is one of the domain ports. Every method says why it exists. The batch methods, for example, are only there because the provider counts five places in one request as a single call.
 
 [`fallback-geocoder.ts`](samples/fallback-geocoder.ts) is a small decorator that asks a second geocoder when the first one could not answer. It deliberately does not do that when the first one answered with "nothing found", because the second one then tends to return the middle of the street instead, up to 1.5 km away from the actual address.
 
 [`call-budget.ts`](samples/call-budget.ts) is the rate limiter described above. It works with sliding windows, so it can never let more through than the provider allows.
+
+The next three files are one path through the hexagon, from the port to the adapter behind it, each with its tests.
+
+[`poi-provider.ts`](samples/poi-provider.ts) is the port for places such as schools, doctors or supermarkets. Besides the search it can report where its data comes from and how old it is, because a missing database file would otherwise only show up as answers that suddenly take seconds instead of milliseconds.
+
+[`sqlite-poi-provider.ts`](samples/sqlite-poi-provider.ts) is the adapter for the app's own OpenStreetMap database. An R-tree narrows the search down and the exact columns decide. It refuses to answer rather than answer incompletely: when the search area reaches beyond the data, or the file was built with a different schema or rule list. Its tests are in [`sqlite-poi-provider.test.ts`](samples/sqlite-poi-provider.test.ts).
+
+[`reachable-area.ts`](samples/reachable-area.ts) is a use case. The way there and the way back are not the same area, so the strict answer to "25 minutes to work" intersects both isochrones. That costs twice the calls, so by default the app now asks only for the way there and accepts an edge a few minutes too generous. Its tests are in [`reachable-area.test.ts`](samples/reachable-area.test.ts).
 
 ## Stack
 
